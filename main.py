@@ -44,22 +44,22 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == -1: return f"-{var}" if var else "-1"
     return f"{signo}{n}{var}"
 
-# --- LÓGICA DE ESTADO ---
-if 'ej_id' not in st.session_state:
+# --- INICIALIZACIÓN SEGURA DEL ESTADO ---
+# Usamos .get() o verificamos la existencia para evitar el AttributeError
+if 'paso' not in st.session_state:
+    st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.c = random.randint(5, 25)
-    st.session_state.paso = 1
-    st.session_state.opciones_paso3 = None
-    st.session_state.opciones_paso5 = None
-    st.session_state.ej_id = True
+    st.session_state.opciones_paso3 = []
+    st.session_state.opciones_paso5 = []
 
 a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
 
 st.title("Módulo de Despeje: Variable Dependiente")
 st.info(f"**Ecuación Inicial:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
 
-# --- PASOS ---
+# --- FLUJO DE PASOS ---
 if st.session_state.paso == 1:
     st.subheader("Paso 1: Identificación")
     resp = st.radio("¿Cuál es la variable dependiente?", ["...", "x", "y"])
@@ -72,14 +72,19 @@ elif st.session_state.paso == 2:
     st.subheader("Paso 2: Neutralizar término")
     inst = st.text_input("¿Qué monomio sumamos o restamos a ambos lados? (ej: -2x):")
     if st.button("Aplicar"):
-        target = fmt_c(-a, 'x').lower()
-        if inst.lower().replace(" ", "").replace("+", "") == target.replace("+", ""):
+        target = fmt_c(-a, 'x').lower().replace("+", "")
+        ingreso = inst.lower().replace(" ", "").replace("+", "")
+        if ingreso == target:
             st.session_state.paso = 3
             st.rerun()
+        else:
+            st.error(f"Incorrecto. Para anular {fmt_c(a, 'x')} se usa {fmt_c(-a, 'x')}")
 
 elif st.session_state.paso == 3:
     st.subheader("Paso 3: Operación Vertical")
     monomio_op = fmt_c(-a, 'x', incluir_mas=True)
+    
+    # Renderizado de la tabla
     st.markdown(f"""<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
         <table class="op-table">
             <tr><td>{fmt_c(a, 'x')}</td><td>{'+' if b > 0 else '-'}</td><td>{fmt_c(abs(b), 'y')}</td><td>=</td><td>{c}</td><td></td></tr>
@@ -87,49 +92,57 @@ elif st.session_state.paso == 3:
             <tr><td colspan="6" class="linea-suma"></td></tr>
         </table></div>""", unsafe_allow_html=True)
 
-    if st.session_state.opciones_paso3 is None:
+    # Generación de opciones única vez para evitar el salto
+    if not st.session_state.opciones_paso3:
         correcta = f"{fmt_c(b, 'y')} = {c} {monomio_op}"
-        opciones = [correcta, f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}", f"2y = {c-a if 'x' not in str(c-a) else c}x"]
-        random.shuffle(opciones)
-        st.session_state.opciones_paso3 = opciones
+        falsas = [
+            f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}",
+            f"{fmt_c(b, 'y')} = {c + (-a if 'x' not in str(c-a) else 0)}x"
+        ]
+        opcs = [correcta] + falsas
+        random.shuffle(opcs)
+        st.session_state.opciones_paso3 = opcs
 
     res_sel = st.radio("¿Cuál es el resultado de la operación?", st.session_state.opciones_paso3)
+    
     if st.button("Verificar Resultado"):
         if res_sel == f"{fmt_c(b, 'y')} = {c} {monomio_op}":
             st.success("¡Correcto!")
             st.session_state.paso = 4
             st.rerun()
+        else:
+            st.error("Revisa los signos. El monomio debe aparecer a la derecha con el signo de la operación.")
 
 elif st.session_state.paso == 4:
     st.subheader("Paso 4: El Coeficiente")
     st.latex(f"{fmt_c(b, 'y')} = {c} {fmt_c(-a, 'x', incluir_mas=True)}")
-    op_div = st.selectbox(f"¿Por cuánto dividimos toda la ecuación para despejar y?", ["...", f"{b}", f"{-b}"], index=0)
+    op_div = st.selectbox("¿Por cuánto dividimos toda la ecuación para despejar y?", ["...", f"{b}", f"{-b}"], index=0)
     if st.button("Siguiente"):
         if op_div == f"{b}":
             st.session_state.paso = 5
             st.rerun()
 
 elif st.session_state.paso == 5:
-    st.subheader("Paso 5: Repartir la división y simplificar")
-    st.write("Selecciona la ecuación final con la división repartida y simplificada:")
-    
+    st.subheader("Paso 5: Ecuación Final")
     m = Fraction(-a, b)
     inter = Fraction(c, b)
     
-    if st.session_state.opciones_paso5 is None:
+    if not st.session_state.opciones_paso5:
         correcta = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
-        op1 = f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}"
-        op2 = f"y = {fmt_c(m, 'x')} {'-' if inter > 0 else '+'}{abs(inter)}"
-        opciones = [correcta, op1, op2]
-        random.shuffle(opciones)
-        st.session_state.opciones_paso5 = opciones
+        falsas = [
+            f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}",
+            f"y = {fmt_c(m, 'x')} {'-' if inter > 0 else '+'}{abs(inter)}"
+        ]
+        opcs = [correcta] + falsas
+        random.shuffle(opcs)
+        st.session_state.opciones_paso5 = opcs
 
-    res_final = st.radio("Resultado final:", st.session_state.opciones_paso5)
+    res_final = st.radio("Selecciona la forma simplificada correcta:", st.session_state.opciones_paso5)
     
     if st.button("Finalizar"):
         if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}":
             st.balloons()
-            st.success("¡Excelente trabajo! Has despejado la variable dependiente correctamente.")
-            if st.button("Nuevo Ejercicio"):
+            st.success("¡Módulo completado con éxito!")
+            if st.button("Reiniciar"):
                 for key in list(st.session_state.keys()): del st.session_state[key]
                 st.rerun()
