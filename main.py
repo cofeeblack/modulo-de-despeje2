@@ -47,7 +47,6 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == 0: return ""
     return f"{signo}{n}{var}"
 
-# --- FUNCIÓN DE REINICIO DE EJERCICIO ---
 def preparar_nuevo_ejercicio():
     st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
@@ -70,7 +69,7 @@ if 'contador_ejercicios' not in st.session_state:
     st.session_state.puntos_totales = 0
     preparar_nuevo_ejercicio()
 
-# --- INFORME FINAL ---
+# --- INFORME FINAL (Después de 10 ejercicios) ---
 if st.session_state.contador_ejercicios >= 10:
     st.title("📊 Informe de Desempeño")
     col1, col2, col3 = st.columns(3)
@@ -128,7 +127,7 @@ elif st.session_state.paso == 3:
             <tr><td colspan="6" class="linea-suma"></td></tr>
         </table></div>""", unsafe_allow_html=True)
 
-    if not st.session_state.opciones_paso3:
+    if not st.session_state.get('opciones_paso3'):
         correcta = f"{fmt_c(b, 'y')} = {c} {monomio_op}"
         opcs = [correcta, f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}", f"{b}y = {c-a}x"]
         random.shuffle(opcs)
@@ -145,7 +144,8 @@ elif st.session_state.paso == 3:
 
 elif st.session_state.paso == 4:
     st.subheader("Paso 4: El Coeficiente")
-    st.latex(f"{fmt_c(b, 'y')} = {c} {fmt_c(-a, 'x', incluir_mas=True)}")
+    monomio_op = fmt_c(-a, 'x', incluir_mas=True)
+    st.latex(f"{fmt_c(b, 'y')} = {c} {monomio_op}")
     op_div = st.selectbox("¿Por cuánto dividimos?", ["...", f"{b}", f"{-b}"], index=0)
     if st.button("Siguiente"):
         if op_div == f"{b}":
@@ -163,7 +163,8 @@ elif st.session_state.paso == 5:
     inter = Fraction(c, b)
     txt_correcta = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
     
-    if not st.session_state.opciones_paso5:
+    # Generar opciones antes de mostrar el radio
+    if not st.session_state.get('opciones_paso5'):
         opcs = [txt_correcta, f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}", f"y = {fmt_c(m, 'x')} - {abs(inter)}"]
         random.shuffle(opcs)
         st.session_state.opciones_paso5 = opcs
@@ -177,13 +178,13 @@ elif st.session_state.paso == 5:
             
             if res_final == txt_correcta and not st.session_state.error_en_actual:
                 st.balloons()
-                st.success("¡Perfecto! Todo el proceso fue impecable. +10 puntos")
+                st.success("¡Perfecto! +10 puntos")
                 st.session_state.ejercicios_perfectos += 1
                 st.session_state.puntos_totales += 10
             else:
-                st.error(f"Ejercicio con errores. 0 puntos ☹️")
+                st.error("Ejercicio con errores. 0 puntos ☹️")
                 if res_final != txt_correcta:
-                    st.info(f"La simplificación correcta era: {txt_correcta}")
+                    st.info(f"La respuesta correcta era: {txt_correcta}")
                 st.session_state.ejercicios_erroneos += 1
             st.rerun()
     else:
