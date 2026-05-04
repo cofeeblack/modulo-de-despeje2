@@ -5,6 +5,7 @@ from fractions import Fraction
 # --- CONFIGURACIÓN DE PÁGINA Y ESTÉTICA ---
 st.set_page_config(page_title="Matemáticas Fabio Molano", layout="centered")
 
+# Aumento de 2 puntos en fuentes generales (de 20px a 22px y de 22px a 24px)
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -15,22 +16,33 @@ st.markdown("""
         border-radius: 10px;
         border: 2px solid #FFD700;
         font-weight: bold;
+        font-size: 20px;
     }
-    div[data-testid="stMarkdownContainer"] > p { font-size: 20px; }
+    /* Cuerpo de texto aumentado 2 puntos */
+    div[data-testid="stMarkdownContainer"] > p { font-size: 22px; }
+    
+    /* Etiquetas de Radio aumentadas 2 puntos (de 22px a 24px) */
     .stRadio label {
-        font-size: 22px !important;
+        font-size: 24px !important;
         font-family: 'Courier New', monospace;
     }
+    
+    /* Tabla de operación aumentada */
     .op-table {
         margin-left: auto;
         margin-right: auto;
         font-family: 'Courier New', monospace;
-        font-size: 22px;
+        font-size: 24px;
         border-collapse: collapse;
     }
-    .op-table td { padding: 0px 10px; text-align: center; }
+    .op-table td { padding: 0px 12px; text-align: center; }
     .red-text { color: #e74c3c; font-weight: bold; }
     .linea-suma { border-top: 2px solid black; }
+    
+    /* Inputs y Selects */
+    .stTextInput input, .stSelectbox div {
+        font-size: 20px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -44,6 +56,12 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == -1: return f"-{var}" if var else "-1"
     if n == 0: return ""
     return f"{signo}{n}{var}"
+
+# --- FUNCIÓN DE REINICIO ---
+def reiniciar_ejercicio():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
 
 # --- INICIALIZACIÓN SEGURA DEL ESTADO ---
 if 'paso' not in st.session_state:
@@ -118,7 +136,6 @@ elif st.session_state.paso == 4:
 
 elif st.session_state.paso == 5:
     st.subheader("Paso 5: Resultado Final")
-    # Mostrar la ecuación del paso anterior con la división repartida
     st.write("A partir de la siguiente operación, indica la ecuación simplificada:")
     st.latex(rf"y = \frac{{{c}}}{{{b}}} \frac{{{fmt_c(-a, 'x', incluir_mas=True)}}}{{{b}}}")
     
@@ -131,10 +148,13 @@ elif st.session_state.paso == 5:
         st.session_state.opciones_paso5 = opcs
 
     res_final = st.radio("Ecuación final:", st.session_state.opciones_paso5)
-    if st.button("Finalizar"):
-        if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}":
-            st.balloons()
-            st.success("¡Excelente trabajo!")
-            if st.button("Nuevo Ejercicio"):
-                for key in list(st.session_state.keys()): del st.session_state[key]
-                st.rerun()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Finalizar"):
+            if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}":
+                st.balloons()
+                st.success("¡Excelente trabajo!")
+    with col2:
+        # Botón de reinicio siempre visible al final del proceso
+        st.button("Nuevo Ejercicio", on_click=reiniciar_ejercicio)
