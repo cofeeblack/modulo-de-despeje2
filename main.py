@@ -11,22 +11,22 @@ st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout=
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
-    .titulo-principal { color: #003366; text-align: center; font-weight: bold; }
+    .titulo-principal { color: #003366; text-align: center; font-weight: bold; margin-top: -20px; }
     .stButton>button {
         background-color: #003366;
         color: #FFD700;
         border-radius: 10px;
         border: 2px solid #FFD700;
         font-weight: bold;
+        font-size: 20px;
         width: 100%;
     }
     .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
+    .stRadio label, .stSelectbox label { font-size: 20px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# URL del logo (sustituir por la ruta local si es necesario)
-LOGO_URL = "https://tu-enlace-aqui.com/logo_ojo_aureo.png" 
-
+# --- FUNCIONES DE LÓGICA ---
 def fmt_c(n, var="", incluir_mas=False):
     if isinstance(n, Fraction):
         signo = "+" if incluir_mas and n > 0 else ""
@@ -43,74 +43,70 @@ def preparar_nuevo_ejercicio():
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.c = random.randint(5, 25)
-    st.session_state.opciones_paso3 = []
-    st.session_state.opciones_paso5 = []
-    st.session_state.error_en_actual = False
     st.session_state.finalizado = False
 
-# --- GESTIÓN DE NAVEGACIÓN ---
+# --- NAVEGACIÓN ---
 if 'pagina' not in st.session_state:
     st.session_state.pagina = "inicio"
 
-# --- VISTA: INICIO / INTRODUCCIÓN ---
+# --- VISTA: INICIO ---
 if st.session_state.pagina == "inicio":
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-    st.image("https://i.imgur.com/vHq4R7p.png", width=400) # Reemplazar por tu archivo
+    # CARGA LOCAL: El archivo debe estar en la misma carpeta
+    try:
+        st.image("Gemini_Generated_Image_51wlso51wlso51wl (1)_2.png", width=450)
+    except Exception:
+        st.error("⚠️ No se encontró el archivo del logo. Verifica que se llame 'Gemini_Generated_Image_51wlso51wlso51wl (1)_2.png'")
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("<h1 class='titulo-principal'>Matemática Esquemática</h1>", unsafe_allow_html=True)
     st.write("---")
-    st.write("Bienvenido al entorno de aprendizaje visual del profesor **Fabio Molano**.")
-    st.write("Aquí transformamos ecuaciones en estructuras comprensibles para dominar el lenguaje del cambio.")
+    st.markdown("""
+    Bienvenido al entorno de aprendizaje visual del profesor **Fabio Molano**.
+    
+    Aquí transformamos ecuaciones en estructuras comprensibles para dominar el lenguaje del cambio.
+    """)
     
     if st.button("Entrar al Módulo de Despeje"):
         st.session_state.pagina = "despeje"
         st.rerun()
 
-# --- VISTA: MÓDULO DE DESPEJE ---
+# --- VISTA: DESPEJE ---
 elif st.session_state.pagina == "despeje":
-    # Sidebar con Logo y Título
     with st.sidebar:
-        st.image("https://i.imgur.com/vHq4R7p.png", use_container_width=True)
+        try:
+            st.image("Gemini_Generated_Image_51wlso51wlso51wl (1)_2.png", use_container_width=True)
+        except: pass
         st.markdown("### Matemática Esquemática")
-        if st.button("Volver al Inicio"):
+        if st.button("🏠 Inicio"):
             st.session_state.pagina = "inicio"
             st.rerun()
 
-    # Inicialización de lógica de ejercicios
     if 'contador_ejercicios' not in st.session_state:
         st.session_state.contador_ejercicios = 0
-        st.session_state.puntos_totales = 0
         preparar_nuevo_ejercicio()
 
-    # (Aquí va toda la lógica del Módulo de Despeje anterior...)
-    # ... [Paso 1 a 4] ...
-    
-    # --- NOVEDAD: PASO 5 CON ANÁLISIS GRÁFICO ---
-    if st.session_state.get('paso') == 5:
-        a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
-        m = Fraction(-a, b)
-        inter = Fraction(c, b)
-        
-        st.subheader("Paso 5: Análisis Esquemático")
-        st.latex(rf"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info(f"**Pendiente (m):** {m}")
-            st.write("Indica la inclinación de la recta.")
-        with col2:
-            st.success(f"**Intercepto (b):** {inter}")
-            st.write("Punto donde cruza el eje Y.")
+    a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
+    st.title("Módulo de Despeje")
+    st.info(f"**Ecuación:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
 
-        # Gráfico dinámico
-        x_vals = np.linspace(-10, 10, 100)
-        y_vals = float(m) * x_vals + float(inter)
-        df_grafico = pd.DataFrame({'x': x_vals, 'y': y_vals})
-        
-        st.line_chart(df_grafico.set_index('x'))
-        
-        if st.button("Finalizar Ejercicio"):
-            st.session_state.contador_ejercicios += 1
-            preparar_nuevo_ejercicio()
-            st.rerun()
+    # Análisis de Pendiente e Intercepto (Simplificado para prueba)
+    m = Fraction(-a, b)
+    inter = Fraction(c, b)
+    
+    st.subheader("Análisis de la Recta")
+    st.latex(rf"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}")
+    
+    col1, col2 = st.columns(2)
+    col1.metric("Pendiente (m)", str(m))
+    col2.metric("Intercepto (b)", str(inter))
+
+    # Gráfico
+    x = np.linspace(-10, 10, 20)
+    y = float(m) * x + float(inter)
+    st.line_chart(pd.DataFrame({'x': x, 'y': y}).set_index('x'))
+
+    if st.button("Siguiente Ejercicio"):
+        st.session_state.contador_ejercicios += 1
+        preparar_nuevo_ejercicio()
+        st.rerun()
