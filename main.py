@@ -47,7 +47,8 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == 0: return ""
     return f"{signo}{n}{var}"
 
-def reiniciar_ejercicio():
+# --- FUNCIÓN DE REINICIO DE EJERCICIO ---
+def preparar_nuevo_ejercicio():
     st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
@@ -57,18 +58,17 @@ def reiniciar_ejercicio():
     st.session_state.error_en_actual = False
     st.session_state.finalizado = False
 
-def reset_total():
+def reiniciar_serie():
     st.session_state.clear()
     st.rerun()
 
-# --- INICIALIZACIÓN ---
+# --- INICIALIZACIÓN GLOBAL ---
 if 'contador_ejercicios' not in st.session_state:
     st.session_state.contador_ejercicios = 0
     st.session_state.ejercicios_perfectos = 0
     st.session_state.ejercicios_erroneos = 0
     st.session_state.puntos_totales = 0
-    st.session_state.finalizado = False
-    reiniciar_ejercicio()
+    preparar_nuevo_ejercicio()
 
 # --- INFORME FINAL ---
 if st.session_state.contador_ejercicios >= 10:
@@ -82,9 +82,10 @@ if st.session_state.contador_ejercicios >= 10:
         st.success("¡Excelente trabajo! Has demostrado un gran dominio.")
     else:
         st.warning("Sigue practicando para pulir esos detalles.")
-    st.button("Nueva Serie de 10", on_click=reset_total)
+    st.button("Nueva Serie de 10", on_click=reiniciar_serie)
     st.stop()
 
+# --- VARIABLES DEL EJERCICIO ACTUAL ---
 a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
 
 st.title("Módulo de Despeje: Variable Dependiente")
@@ -92,6 +93,7 @@ st.write(f"**Ejercicio {st.session_state.contador_ejercicios + 1} de 10**")
 st.info(f"**Ecuación Inicial:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
 
 # --- FLUJO DE PASOS ---
+
 if st.session_state.paso == 1:
     st.subheader("Paso 1: Identificación")
     resp = st.radio("¿Cuál es la variable dependiente?", ["...", "x", "y"])
@@ -185,4 +187,4 @@ elif st.session_state.paso == 5:
                 st.session_state.ejercicios_erroneos += 1
             st.rerun()
     else:
-        st.button("Continuar al siguiente", on_click=reiniciar_ejercicio)
+        st.button("Continuar al siguiente", on_click=preparar_nuevo_ejercicio)
