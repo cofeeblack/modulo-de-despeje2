@@ -7,23 +7,24 @@ from fractions import Fraction
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS REFINADOS ---
+# --- ESTILOS PERSONALIZADOS (AJUSTE DE PROPORCIÓN Y POSICIÓN) ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
     
-    /* Título más grande y con ajuste de posición hacia la izquierda */
+    /* Título con aumento proporcional y desplazamiento mayor a la izquierda */
     .titulo-esquemática { 
         color: #002D62 !important; 
         text-align: center !important; 
         font-weight: bold !important; 
-        font-size: 52px !important; /* Aumentado para mayor impacto */
+        font-size: 62px !important; /* Aumento proporcional a la escala anterior */
         margin-top: 5px !important;
         margin-bottom: 30px !important;
-        margin-left: -15px !important; /* Desplazamiento a la izquierda para centrar con el logo */
+        margin-left: -35px !important; /* Desplazamiento acentuado a la izquierda */
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block;
-        letter-spacing: -1px; /* Mejora la elegancia de la fuente grande */
+        letter-spacing: -2px; /* Ajuste de interletrado para fuentes grandes */
+        white-space: nowrap; /* Evita que el texto salte de línea por el tamaño */
     }
     
     .texto-centrado {
@@ -64,15 +65,14 @@ if 'pagina' not in st.session_state:
 
 # --- VISTA: INICIO ---
 if st.session_state.pagina == "inicio":
-    # Contenedor del Logo
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try:
         st.image(NOMBRE_LOGO, width=480)
     except:
-        st.error(f"Asegúrate de subir '{NOMBRE_LOGO}' a GitHub")
+        st.error(f"Asegúrate de que el archivo se llame '{NOMBRE_LOGO}' en tu repositorio.")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Título ajustado visualmente
+    # Aplicación del nuevo estilo escalado
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
     
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -86,10 +86,10 @@ if st.session_state.pagina == "inicio":
         st.session_state.pagina = "despeje"
         st.rerun()
 
-# --- VISTA: DESPEJE (Estructura base) ---
+# --- VISTA: DESPEJE ---
 elif st.session_state.pagina == "despeje":
     st.title("Módulo de Despeje")
-    st.write("Configurando ejercicios de trigonometría y álgebra...")
+    st.write("Cargando ejercicios interactivos...")
     if st.button("Volver al Inicio"):
         st.session_state.pagina = "inicio"
         st.rerun()
