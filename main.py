@@ -58,8 +58,8 @@ def preparar_nuevo_ejercicio():
     st.session_state.finalizado = False
 
 def reiniciar_serie():
+    # Eliminamos st.rerun() de aquí para evitar el aviso amarillo
     st.session_state.clear()
-    st.rerun()
 
 # --- INICIALIZACIÓN GLOBAL ---
 if 'contador_ejercicios' not in st.session_state:
@@ -69,7 +69,7 @@ if 'contador_ejercicios' not in st.session_state:
     st.session_state.puntos_totales = 0
     preparar_nuevo_ejercicio()
 
-# --- INFORME FINAL (Después de 10 ejercicios) ---
+# --- INFORME FINAL ---
 if st.session_state.contador_ejercicios >= 10:
     st.title("📊 Informe de Desempeño")
     col1, col2, col3 = st.columns(3)
@@ -163,7 +163,6 @@ elif st.session_state.paso == 5:
     inter = Fraction(c, b)
     txt_correcta = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
     
-    # Generar opciones antes de mostrar el radio
     if not st.session_state.get('opciones_paso5'):
         opcs = [txt_correcta, f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}", f"y = {fmt_c(m, 'x')} - {abs(inter)}"]
         random.shuffle(opcs)
