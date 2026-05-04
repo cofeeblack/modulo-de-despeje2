@@ -3,7 +3,7 @@ import streamlit as st
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS (DESPLAZAMIENTO TOTAL ACUMULADO) ---
+# --- ESTILOS PERSONALIZADOS (ALINEACIÓN IZQUIERDA EXTREMA) ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -15,8 +15,8 @@ st.markdown("""
         font-size: 62px !important;
         margin-top: 5px !important;
         margin-bottom: 30px !important;
-        /* Desplazamiento agresivo a la izquierda (-120px) */
-        margin-left: -120px !important; 
+        /* Desplazamiento acumulado: -120px + -50px = -170px */
+        margin-left: -170px !important; 
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block;
         letter-spacing: -2px;
@@ -52,22 +52,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- CONTENIDO ---
-# Usando el nombre del archivo de tu diseño del "Ojo Áureo"
+# --- CONFIGURACIÓN DE RECURSOS ---
 NOMBRE_LOGO = "logo fabio faraon.png" 
 
 if 'pagina' not in st.session_state:
     st.session_state.pagina = "inicio"
 
+# --- VISTA: INICIO ---
 if st.session_state.pagina == "inicio":
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try:
         st.image(NOMBRE_LOGO, width=480)
     except:
-        st.error(f"Archivo '{NOMBRE_LOGO}' no detectado.")
+        st.error(f"Por favor, verifica que el archivo se llame '{NOMBRE_LOGO}' en tu carpeta.")
     st.markdown('</div>', unsafe_allow_html=True)
     
+    # Título con el nuevo desplazamiento de -170px
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
+    
     st.markdown("<hr>", unsafe_allow_html=True)
     
     st.markdown('<span class="texto-centrado">Bienvenido al entorno visual del profesor <b>Fabio Molano</b>.</span>', unsafe_allow_html=True)
@@ -78,8 +80,10 @@ if st.session_state.pagina == "inicio":
         st.session_state.pagina = "despeje"
         st.rerun()
 
+# --- VISTA: MÓDULO DE DESPEJE ---
 elif st.session_state.pagina == "despeje":
     st.title("Módulo de Despeje")
+    st.info("Espacio para la resolución esquemática de ecuaciones.")
     if st.button("Volver al Inicio"):
         st.session_state.pagina = "inicio"
         st.rerun()
