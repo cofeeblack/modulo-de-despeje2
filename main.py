@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit as st
 import random
 import pandas as pd
 import numpy as np
@@ -8,24 +7,25 @@ from fractions import Fraction
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS (AQUÍ ESTÁ EL CAMBIO) ---
+# --- ESTILOS PERSONALIZADOS REFINADOS ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
     
-    /* 1. Título centrado, color azul logo y tamaño ajustado */
+    /* Título más grande y con ajuste de posición hacia la izquierda */
     .titulo-esquemática { 
         color: #002D62 !important; 
         text-align: center !important; 
         font-weight: bold !important; 
-        font-size: 42px !important;
-        margin-top: 0px !important;
+        font-size: 52px !important; /* Aumentado para mayor impacto */
+        margin-top: 5px !important;
         margin-bottom: 30px !important;
+        margin-left: -15px !important; /* Desplazamiento a la izquierda para centrar con el logo */
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block;
+        letter-spacing: -1px; /* Mejora la elegancia de la fuente grande */
     }
     
-    /* 2. Centrado de los textos de bienvenida */
     .texto-centrado {
         text-align: center !important;
         font-size: 20px !important;
@@ -34,7 +34,6 @@ st.markdown("""
         width: 100%;
     }
 
-    /* 3. Botón con el azul del logo */
     .stButton>button {
         background-color: #002D62 !important;
         color: #FFD700 !important;
@@ -46,11 +45,10 @@ st.markdown("""
         height: 60px;
     }
     
-    /* 4. Contenedor del logo */
     .logo-container { 
         display: flex; 
         justify-content: center; 
-        margin-bottom: 10px;
+        margin-bottom: 0px;
     }
 
     hr { margin-top: 0px; margin-bottom: 25px; }
@@ -60,48 +58,25 @@ st.markdown("""
 # --- ARCHIVOS ---
 NOMBRE_LOGO = "logo fabio faraon.png"
 
-# --- FUNCIONES ---
-def fmt_c(n, var="", incluir_mas=False):
-    if isinstance(n, Fraction):
-        signo = "+" if incluir_mas and n > 0 else ""
-        if n.denominator == 1: return fmt_c(n.numerator, var, incluir_mas)
-        return f"{signo}{n}{var}"
-    signo = "+" if incluir_mas and n > 0 else ""
-    if n == 1: return f"{signo}{var}" if var else f"{signo}1"
-    if n == -1: return f"-{var}" if var else "-1"
-    if n == 0: return ""
-    return f"{signo}{n}{var}"
-
-def preparar_nuevo_ejercicio():
-    st.session_state.paso = 1
-    st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
-    st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
-    st.session_state.c = random.randint(5, 25)
-    st.session_state.opciones_paso3 = []
-    st.session_state.opciones_paso5 = []
-    st.session_state.error_en_actual = False
-    st.session_state.finalizado = False
-
 # --- LÓGICA DE NAVEGACIÓN ---
 if 'pagina' not in st.session_state:
     st.session_state.pagina = "inicio"
 
 # --- VISTA: INICIO ---
 if st.session_state.pagina == "inicio":
-    # Logo
+    # Contenedor del Logo
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try:
         st.image(NOMBRE_LOGO, width=480)
     except:
-        st.error(f"Logo no encontrado: {NOMBRE_LOGO}")
+        st.error(f"Asegúrate de subir '{NOMBRE_LOGO}' a GitHub")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Título (Cambiado a azul #002D62)
+    # Título ajustado visualmente
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
     
     st.markdown("<hr>", unsafe_allow_html=True)
     
-    # Textos centrados
     st.markdown('<span class="texto-centrado">Bienvenido al entorno visual del profesor <b>Fabio Molano</b>.</span>', unsafe_allow_html=True)
     st.markdown('<span class="texto-centrado">Aquí transformamos ecuaciones en estructuras comprensibles para dominar el lenguaje del cambio.</span>', unsafe_allow_html=True)
     
@@ -111,9 +86,10 @@ if st.session_state.pagina == "inicio":
         st.session_state.pagina = "despeje"
         st.rerun()
 
-# --- VISTA: DESPEJE (Omitido el resto para que pruebes primero el cambio visual) ---
+# --- VISTA: DESPEJE (Estructura base) ---
 elif st.session_state.pagina == "despeje":
-    st.title("Módulo en construcción")
-    if st.button("Volver"):
+    st.title("Módulo de Despeje")
+    st.write("Configurando ejercicios de trigonometría y álgebra...")
+    if st.button("Volver al Inicio"):
         st.session_state.pagina = "inicio"
         st.rerun()
