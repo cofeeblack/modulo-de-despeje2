@@ -1,9 +1,9 @@
-import streamlit as st  # <--- ESTA LÍNEA ES VITAL
+import streamlit as st
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS (ALINEACIÓN FINAL) ---
+# --- ESTILOS PERSONALIZADOS (DESPLAZAMIENTO TOTAL ACUMULADO) ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -15,8 +15,8 @@ st.markdown("""
         font-size: 62px !important;
         margin-top: 5px !important;
         margin-bottom: 30px !important;
-        /* Ajuste de desplazamiento a la izquierda */
-        margin-left: -60px !important; 
+        /* Desplazamiento agresivo a la izquierda (-120px) */
+        margin-left: -120px !important; 
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block;
         letter-spacing: -2px;
@@ -52,8 +52,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- CONTENIDO DE LA PÁGINA ---
-# (Asegúrate de que el archivo del logo esté en la misma carpeta en GitHub)
+# --- CONTENIDO ---
+# Usando el nombre del archivo de tu diseño del "Ojo Áureo"
 NOMBRE_LOGO = "logo fabio faraon.png" 
 
 if 'pagina' not in st.session_state:
@@ -64,7 +64,7 @@ if st.session_state.pagina == "inicio":
     try:
         st.image(NOMBRE_LOGO, width=480)
     except:
-        st.error(f"No se encontró el logo: {NOMBRE_LOGO}")
+        st.error(f"Archivo '{NOMBRE_LOGO}' no detectado.")
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
