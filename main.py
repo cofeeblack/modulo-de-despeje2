@@ -16,11 +16,13 @@ st.markdown("""
         border: 2px solid #FFD700;
         font-weight: bold;
     }
+    /* Tamaño de fuente para enunciados y opciones */
     div[data-testid="stMarkdownContainer"] > p { font-size: 20px; }
     .stRadio label {
         font-size: 22px !important;
         font-family: 'Courier New', monospace;
     }
+    /* Estilo para la operación vertical alineada */
     .op-table {
         margin-left: auto;
         margin-right: auto;
@@ -34,18 +36,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Función para formatear coeficientes (oculta el 1 y maneja signos)
 def fmt_c(n, var="", incluir_mas=False):
     if isinstance(n, Fraction):
         signo = "+" if incluir_mas and n > 0 else ""
         if n.denominator == 1: return fmt_c(n.numerator, var, incluir_mas)
         return f"{signo}{n}{var}"
+    
     signo = "+" if incluir_mas and n > 0 else ""
     if n == 1: return f"{signo}{var}" if var else f"{signo}1"
     if n == -1: return f"-{var}" if var else "-1"
+    if n == 0: return ""
     return f"{signo}{n}{var}"
 
-# --- INICIALIZACIÓN SEGURA DEL ESTADO ---
-# Usamos .get() o verificamos la existencia para evitar el AttributeError
+# --- INICIALIZACIÓN SEGURA DEL ESTADO (Session State) ---
 if 'paso' not in st.session_state:
     st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
@@ -60,6 +64,8 @@ st.title("Módulo de Despeje: Variable Dependiente")
 st.info(f"**Ecuación Inicial:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
 
 # --- FLUJO DE PASOS ---
+
+# PASO 1: IDENTIFICACIÓN
 if st.session_state.paso == 1:
     st.subheader("Paso 1: Identificación")
     resp = st.radio("¿Cuál es la variable dependiente?", ["...", "x", "y"])
@@ -68,31 +74,54 @@ if st.session_state.paso == 1:
             st.session_state.paso = 2
             st.rerun()
 
+# PASO 2: NEUTRALIZAR (CON PISTAS)
 elif st.session_state.paso == 2:
     st.subheader("Paso 2: Neutralizar término")
+    st.write("Para dejar solo el término con **y**, debemos eliminar el término de las **x**.")
     inst = st.text_input("¿Qué monomio sumamos o restamos a ambos lados? (ej: -2x):")
+    
     if st.button("Aplicar"):
         target = fmt_c(-a, 'x').lower().replace("+", "")
         ingreso = inst.lower().replace(" ", "").replace("+", "")
+        
         if ingreso == target:
             st.session_state.paso = 3
             st.rerun()
         else:
-            st.error(f"Incorrecto. Para anular {fmt_c(a, 'x')} se usa {fmt_c(-a, 'x')}")
+            if a > 0:
+                st.warning(f"Pista: El término {fmt_c(a, 'x')} es positivo (está sumando). Si quieres que desaparezca un término que está sumando, entonces debes...")
+            else:
+                st.warning(f"Pista: El término {fmt_c(a, 'x')} es negativo (está restando). Si quieres que desaparezca un término que está restando, entonces debes...")
 
+# PASO 3: OPERACIÓN VERTICAL Y RESULTADO
 elif st.session_state.paso == 3:
     st.subheader("Paso 3: Operación Vertical")
     monomio_op = fmt_c(-a, 'x', incluir_mas=True)
     
-    # Renderizado de la tabla
-    st.markdown(f"""<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
+    st.markdown(f"""
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
         <table class="op-table">
-            <tr><td>{fmt_c(a, 'x')}</td><td>{'+' if b > 0 else '-'}</td><td>{fmt_c(abs(b), 'y')}</td><td>=</td><td>{c}</td><td></td></tr>
-            <tr class="red-text"><td>{monomio_op}</td><td></td><td></td><td>=</td><td></td><td>{monomio_op}</td></tr>
+            <tr>
+                <td>{fmt_c(a, 'x')}</td>
+                <td>{'+' if b > 0 else '-'}</td>
+                <td>{fmt_c(abs(b), 'y')}</td>
+                <td>=</td>
+                <td>{c}</td>
+                <td></td>
+            </tr>
+            <tr class="red-text">
+                <td>{monomio_op}</td>
+                <td></td>
+                <td></td>
+                <td>=</td>
+                <td></td>
+                <td>{monomio_op}</td>
+            </tr>
             <tr><td colspan="6" class="linea-suma"></td></tr>
-        </table></div>""", unsafe_allow_html=True)
+        </table>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Generación de opciones única vez para evitar el salto
     if not st.session_state.opciones_paso3:
         correcta = f"{fmt_c(b, 'y')} = {c} {monomio_op}"
         falsas = [
@@ -107,21 +136,23 @@ elif st.session_state.paso == 3:
     
     if st.button("Verificar Resultado"):
         if res_sel == f"{fmt_c(b, 'y')} = {c} {monomio_op}":
-            st.success("¡Correcto!")
+            st.success("¡Correcto! El término desaparece a la izquierda y aparece a la derecha.")
             st.session_state.paso = 4
             st.rerun()
-        else:
-            st.error("Revisa los signos. El monomio debe aparecer a la derecha con el signo de la operación.")
 
+# PASO 4: DIVISIÓN POR COEFICIENTE
 elif st.session_state.paso == 4:
     st.subheader("Paso 4: El Coeficiente")
-    st.latex(f"{fmt_c(b, 'y')} = {c} {fmt_c(-a, 'x', incluir_mas=True)}")
+    monomio_op = fmt_c(-a, 'x', incluir_mas=True)
+    st.latex(f"{fmt_c(b, 'y')} = {c} {monomio_op}")
     op_div = st.selectbox("¿Por cuánto dividimos toda la ecuación para despejar y?", ["...", f"{b}", f"{-b}"], index=0)
+    
     if st.button("Siguiente"):
         if op_div == f"{b}":
             st.session_state.paso = 5
             st.rerun()
 
+# PASO 5: RESULTADO FINAL (MULTIPLE CHOICE)
 elif st.session_state.paso == 5:
     st.subheader("Paso 5: Ecuación Final")
     m = Fraction(-a, b)
@@ -142,7 +173,7 @@ elif st.session_state.paso == 5:
     if st.button("Finalizar"):
         if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}":
             st.balloons()
-            st.success("¡Módulo completado con éxito!")
-            if st.button("Reiniciar"):
+            st.success("¡Excelente! Has despejado la variable correctamente.")
+            if st.button("Hacer otro ejercicio"):
                 for key in list(st.session_state.keys()): del st.session_state[key]
                 st.rerun()
