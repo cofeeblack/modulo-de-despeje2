@@ -3,7 +3,7 @@ import streamlit as st
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS (ALINEACIÓN IZQUIERDA EXTREMA) ---
+# --- ESTILOS PERSONALIZADOS (AJUSTE FINO DE ALINEACIÓN) ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -15,8 +15,8 @@ st.markdown("""
         font-size: 62px !important;
         margin-top: 5px !important;
         margin-bottom: 30px !important;
-        /* Desplazamiento acumulado: -120px + -50px = -170px */
-        margin-left: -170px !important; 
+        /* Desplazamiento acumulado: -200px + -25px = -225px */
+        margin-left: -225px !important; 
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block;
         letter-spacing: -2px;
@@ -52,7 +52,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- CONFIGURACIÓN DE RECURSOS ---
+# --- RECURSOS ---
 NOMBRE_LOGO = "logo fabio faraon.png" 
 
 if 'pagina' not in st.session_state:
@@ -64,10 +64,10 @@ if st.session_state.pagina == "inicio":
     try:
         st.image(NOMBRE_LOGO, width=480)
     except:
-        st.error(f"Por favor, verifica que el archivo se llame '{NOMBRE_LOGO}' en tu carpeta.")
+        st.error(f"Verifica que '{NOMBRE_LOGO}' esté en tu repositorio de GitHub.")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Título con el nuevo desplazamiento de -170px
+    # Aplicación del desplazamiento de -225px
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
     
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -83,7 +83,7 @@ if st.session_state.pagina == "inicio":
 # --- VISTA: MÓDULO DE DESPEJE ---
 elif st.session_state.pagina == "despeje":
     st.title("Módulo de Despeje")
-    st.info("Espacio para la resolución esquemática de ecuaciones.")
+    st.write("Cargando herramientas de modelado matemático...")
     if st.button("Volver al Inicio"):
         st.session_state.pagina = "inicio"
         st.rerun()
