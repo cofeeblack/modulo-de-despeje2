@@ -5,7 +5,6 @@ from fractions import Fraction
 # --- CONFIGURACIÓN DE PÁGINA Y ESTÉTICA ---
 st.set_page_config(page_title="Matemáticas Fabio Molano", layout="centered")
 
-# Aumento de 2 puntos en fuentes generales (de 20px a 22px y de 22px a 24px)
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -16,18 +15,18 @@ st.markdown("""
         border-radius: 10px;
         border: 2px solid #FFD700;
         font-weight: bold;
-        font-size: 20px;
+        font-size: 22px; /* Aumentado */
     }
-    /* Cuerpo de texto aumentado 2 puntos */
+    /* Cuerpo de texto y enunciados (+2 puntos) */
     div[data-testid="stMarkdownContainer"] > p { font-size: 22px; }
     
-    /* Etiquetas de Radio aumentadas 2 puntos (de 22px a 24px) */
-    .stRadio label {
+    /* Etiquetas de Radio y Selectbox (+2 puntos) */
+    .stRadio label, .stSelectbox label {
         font-size: 24px !important;
         font-family: 'Courier New', monospace;
     }
     
-    /* Tabla de operación aumentada */
+    /* Tabla de operación (+2 puntos) */
     .op-table {
         margin-left: auto;
         margin-right: auto;
@@ -39,9 +38,9 @@ st.markdown("""
     .red-text { color: #e74c3c; font-weight: bold; }
     .linea-suma { border-top: 2px solid black; }
     
-    /* Inputs y Selects */
-    .stTextInput input, .stSelectbox div {
-        font-size: 20px !important;
+    /* Inputs de texto */
+    .stTextInput input {
+        font-size: 22px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -57,13 +56,13 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == 0: return ""
     return f"{signo}{n}{var}"
 
-# --- FUNCIÓN DE REINICIO ---
+# --- FUNCIÓN DE REINICIO CORREGIDA ---
 def reiniciar_ejercicio():
+    # Solo limpiamos el estado, el on_click hará el rerun automáticamente
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.rerun()
 
-# --- INICIALIZACIÓN SEGURA DEL ESTADO ---
+# --- INICIALIZACIÓN ---
 if 'paso' not in st.session_state:
     st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
@@ -156,5 +155,4 @@ elif st.session_state.paso == 5:
                 st.balloons()
                 st.success("¡Excelente trabajo!")
     with col2:
-        # Botón de reinicio siempre visible al final del proceso
         st.button("Nuevo Ejercicio", on_click=reiniciar_ejercicio)
