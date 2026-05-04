@@ -15,18 +15,13 @@ st.markdown("""
         border-radius: 10px;
         border: 2px solid #FFD700;
         font-weight: bold;
-        font-size: 22px; /* Aumentado */
+        font-size: 22px;
     }
-    /* Cuerpo de texto y enunciados (+2 puntos) */
     div[data-testid="stMarkdownContainer"] > p { font-size: 22px; }
-    
-    /* Etiquetas de Radio y Selectbox (+2 puntos) */
     .stRadio label, .stSelectbox label {
         font-size: 24px !important;
         font-family: 'Courier New', monospace;
     }
-    
-    /* Tabla de operación (+2 puntos) */
     .op-table {
         margin-left: auto;
         margin-right: auto;
@@ -37,11 +32,7 @@ st.markdown("""
     .op-table td { padding: 0px 12px; text-align: center; }
     .red-text { color: #e74c3c; font-weight: bold; }
     .linea-suma { border-top: 2px solid black; }
-    
-    /* Inputs de texto */
-    .stTextInput input {
-        font-size: 22px !important;
-    }
+    .stTextInput input { font-size: 22px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -56,27 +47,56 @@ def fmt_c(n, var="", incluir_mas=False):
     if n == 0: return ""
     return f"{signo}{n}{var}"
 
-# --- FUNCIÓN DE REINICIO CORREGIDA ---
 def reiniciar_ejercicio():
-    # Solo limpiamos el estado, el on_click hará el rerun automáticamente
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-
-# --- INICIALIZACIÓN ---
-if 'paso' not in st.session_state:
+    # Mantenemos el conteo global y reiniciamos el ejercicio actual
     st.session_state.paso = 1
     st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
     st.session_state.c = random.randint(5, 25)
     st.session_state.opciones_paso3 = []
     st.session_state.opciones_paso5 = []
+    st.session_state.error_en_actual = False
 
+def reset_total():
+    st.session_state.clear()
+    st.rerun()
+
+# --- INICIALIZACIÓN DE VARIABLES DE SESIÓN ---
+if 'contador_ejercicios' not in st.session_state:
+    st.session_state.contador_ejercicios = 0
+    st.session_state.ejercicios_perfectos = 0
+    st.session_state.ejercicios_erroneos = 0
+    st.session_state.puntos_totales = 0
+    st.session_state.error_en_actual = False
+    reiniciar_ejercicio()
+
+# --- PANTALLA DE INFORME FINAL ---
+if st.session_state.contador_ejercicios >= 10:
+    st.title("📊 Informe de Desempeño")
+    st.write(f"Has completado la serie de 10 ejercicios.")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Puntaje Total", f"{st.session_state.puntos_totales}/100")
+    col2.metric("Perfectos", st.session_state.ejercicios_perfectos)
+    col3.metric("Con errores", st.session_state.ejercicios_erroneos)
+    
+    if st.session_state.puntos_totales >= 70:
+        st.success("¡Excelente trabajo! Tienes un gran dominio del despeje.")
+    else:
+        st.warning("Buen esfuerzo. Sigue practicando para mejorar tu precisión.")
+        
+    if st.button("Comenzar nueva serie", on_click=reset_total):
+        pass
+    st.stop()
+
+# --- INTERFAZ DEL EJERCICIO ---
 a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
 
 st.title("Módulo de Despeje: Variable Dependiente")
+st.write(f"**Ejercicio {st.session_state.contador_ejercicios + 1} de 10**")
 st.info(f"**Ecuación Inicial:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
 
-# --- FLUJO DE PASOS ---
+# --- PASOS ---
 
 if st.session_state.paso == 1:
     st.subheader("Paso 1: Identificación")
@@ -85,10 +105,13 @@ if st.session_state.paso == 1:
         if resp == "y":
             st.session_state.paso = 2
             st.rerun()
+        else:
+            st.session_state.error_en_actual = True
+            st.error("Identificación incorrecta. Recuerda que despejamos 'y' ☹️")
 
 elif st.session_state.paso == 2:
     st.subheader("Paso 2: Neutralizar término")
-    inst = st.text_input("¿Qué monomio sumamos o restamos a ambos lados? (ej: -2x):")
+    inst = st.text_input("¿Qué monomio sumamos o restamos a ambos lados?")
     if st.button("Aplicar"):
         target = fmt_c(-a, 'x').lower().replace("+", "")
         ingreso = inst.lower().replace(" ", "").replace("+", "")
@@ -96,10 +119,9 @@ elif st.session_state.paso == 2:
             st.session_state.paso = 3
             st.rerun()
         else:
-            if a > 0:
-                st.warning(f"Pista: El término {fmt_c(a, 'x')} es positivo. Si quieres que desaparezca un término que está sumando, entonces debes...")
-            else:
-                st.warning(f"Pista: El término {fmt_c(a, 'x')} es negativo. Si quieres que desaparezca un término que está restando, entonces debes...")
+            st.session_state.error_en_actual = True
+            pista = "positivo (suma)" if a > 0 else "negativo (resta)"
+            st.warning(f"Intento fallido ☹️. Pista: El término {fmt_c(a, 'x')} es {pista}. Para anularlo debes...")
 
 elif st.session_state.paso == 3:
     st.subheader("Paso 3: Operación Vertical")
@@ -113,46 +135,55 @@ elif st.session_state.paso == 3:
 
     if not st.session_state.opciones_paso3:
         correcta = f"{fmt_c(b, 'y')} = {c} {monomio_op}"
-        opcs = [correcta, f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}", f"2y = {c-a if 'x' not in str(c-a) else c}x"]
+        opcs = [correcta, f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}", f"{b}y = {c-a}x"]
         random.shuffle(opcs)
         st.session_state.opciones_paso3 = opcs
 
-    res_sel = st.radio("¿Cuál es el resultado de la operación?", st.session_state.opciones_paso3)
-    if st.button("Verificar Resultado"):
+    res_sel = st.radio("¿Cuál es el resultado?", st.session_state.opciones_paso3)
+    if st.button("Verificar"):
         if res_sel == f"{fmt_c(b, 'y')} = {c} {monomio_op}":
             st.session_state.paso = 4
             st.rerun()
+        else:
+            st.session_state.error_en_actual = True
+            st.error("Ese no es el resultado de la suma vertical ☹️")
 
 elif st.session_state.paso == 4:
     st.subheader("Paso 4: El Coeficiente")
-    monomio_op = fmt_c(-a, 'x', incluir_mas=True)
-    st.latex(f"{fmt_c(b, 'y')} = {c} {monomio_op}")
+    st.latex(f"{fmt_c(b, 'y')} = {c} {fmt_c(-a, 'x', incluir_mas=True)}")
     op_div = st.selectbox("¿Por cuánto dividimos toda la ecuación?", ["...", f"{b}", f"{-b}"], index=0)
     if st.button("Siguiente"):
         if op_div == f"{b}":
             st.session_state.paso = 5
             st.rerun()
+        else:
+            st.session_state.error_en_actual = True
+            st.error(f"¡Cuidado! Debes dividir por el coeficiente exacto de y ☹️")
 
 elif st.session_state.paso == 5:
     st.subheader("Paso 5: Resultado Final")
-    st.write("A partir de la siguiente operación, indica la ecuación simplificada:")
     st.latex(rf"y = \frac{{{c}}}{{{b}}} \frac{{{fmt_c(-a, 'x', incluir_mas=True)}}}{{{b}}}")
     
     m = Fraction(-a, b)
     inter = Fraction(c, b)
     if not st.session_state.opciones_paso5:
         correcta = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
-        opcs = [correcta, f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}", f"y = {fmt_c(m, 'x')} {'-' if inter > 0 else '+'}{abs(inter)}"]
+        opcs = [correcta, f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}", f"y = {fmt_c(m, 'x')} - {abs(inter)}"]
         random.shuffle(opcs)
         st.session_state.opciones_paso5 = opcs
 
-    res_final = st.radio("Ecuación final:", st.session_state.opciones_paso5)
+    res_final = st.radio("Simplificación final:", st.session_state.opciones_paso5)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Finalizar"):
-            if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}":
-                st.balloons()
-                st.success("¡Excelente trabajo!")
-    with col2:
-        st.button("Nuevo Ejercicio", on_click=reiniciar_ejercicio)
+    if st.button("Finalizar Ejercicio"):
+        st.session_state.contador_ejercicios += 1
+        
+        if res_final == f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}" and not st.session_state.error_en_actual:
+            st.balloons()
+            st.success("¡Perfecto! +10 puntos")
+            st.session_state.ejercicios_perfectos += 1
+            st.session_state.puntos_totales += 10
+        else:
+            st.error("Ejercicio terminado con errores. 0 puntos ☹️")
+            st.session_state.ejercicios_erroneos += 1
+            
+        st.button("Continuar al siguiente", on_click=reiniciar_ejercicio)
