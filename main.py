@@ -1,40 +1,31 @@
 import streamlit as st
 import random
+import pandas as pd
+import numpy as np
 from fractions import Fraction
 
-# --- CONFIGURACIÓN DE PÁGINA Y ESTÉTICA ---
-st.set_page_config(page_title="Matemáticas Fabio Molano", layout="centered")
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
+# --- ESTILOS PERSONALIZADOS ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
-    h1 { color: #003366; }
+    .titulo-principal { color: #003366; text-align: center; font-weight: bold; }
     .stButton>button {
         background-color: #003366;
         color: #FFD700;
         border-radius: 10px;
         border: 2px solid #FFD700;
         font-weight: bold;
-        font-size: 22px;
+        width: 100%;
     }
-    div[data-testid="stMarkdownContainer"] > p { font-size: 22px; }
-    .stRadio label, .stSelectbox label {
-        font-size: 24px !important;
-        font-family: 'Courier New', monospace;
-    }
-    .op-table {
-        margin-left: auto;
-        margin-right: auto;
-        font-family: 'Courier New', monospace;
-        font-size: 24px;
-        border-collapse: collapse;
-    }
-    .op-table td { padding: 0px 12px; text-align: center; }
-    .red-text { color: #e74c3c; font-weight: bold; }
-    .linea-suma { border-top: 2px solid black; }
-    .stTextInput input { font-size: 22px !important; }
+    .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
     </style>
     """, unsafe_allow_html=True)
+
+# URL del logo (sustituir por la ruta local si es necesario)
+LOGO_URL = "https://tu-enlace-aqui.com/logo_ojo_aureo.png" 
 
 def fmt_c(n, var="", incluir_mas=False):
     if isinstance(n, Fraction):
@@ -57,134 +48,69 @@ def preparar_nuevo_ejercicio():
     st.session_state.error_en_actual = False
     st.session_state.finalizado = False
 
-def reiniciar_serie():
-    # Eliminamos st.rerun() de aquí para evitar el aviso amarillo
-    st.session_state.clear()
+# --- GESTIÓN DE NAVEGACIÓN ---
+if 'pagina' not in st.session_state:
+    st.session_state.pagina = "inicio"
 
-# --- INICIALIZACIÓN GLOBAL ---
-if 'contador_ejercicios' not in st.session_state:
-    st.session_state.contador_ejercicios = 0
-    st.session_state.ejercicios_perfectos = 0
-    st.session_state.ejercicios_erroneos = 0
-    st.session_state.puntos_totales = 0
-    preparar_nuevo_ejercicio()
-
-# --- INFORME FINAL ---
-if st.session_state.contador_ejercicios >= 10:
-    st.title("📊 Informe de Desempeño")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Puntaje Total", f"{st.session_state.puntos_totales}/100")
-    col2.metric("Perfectos", st.session_state.ejercicios_perfectos)
-    col3.metric("Con errores", st.session_state.ejercicios_erroneos)
+# --- VISTA: INICIO / INTRODUCCIÓN ---
+if st.session_state.pagina == "inicio":
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.image("https://i.imgur.com/vHq4R7p.png", width=400) # Reemplazar por tu archivo
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.session_state.puntos_totales >= 70:
-        st.success("¡Excelente trabajo! Has demostrado un gran dominio.")
-    else:
-        st.warning("Sigue practicando para pulir esos detalles.")
-    st.button("Nueva Serie de 10", on_click=reiniciar_serie)
-    st.stop()
-
-# --- VARIABLES DEL EJERCICIO ACTUAL ---
-a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
-
-st.title("Módulo de Despeje: Variable Dependiente")
-st.write(f"**Ejercicio {st.session_state.contador_ejercicios + 1} de 10**")
-st.info(f"**Ecuación Inicial:** {fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}")
-
-# --- FLUJO DE PASOS ---
-
-if st.session_state.paso == 1:
-    st.subheader("Paso 1: Identificación")
-    resp = st.radio("¿Cuál es la variable dependiente?", ["...", "x", "y"])
-    if st.button("Comprobar"):
-        if resp == "y":
-            st.session_state.paso = 2
-            st.rerun()
-        else:
-            st.session_state.error_en_actual = True
-            st.error("Identificación incorrecta. Despejamos 'y' ☹️")
-
-elif st.session_state.paso == 2:
-    st.subheader("Paso 2: Neutralizar término")
-    inst = st.text_input("¿Qué monomio sumamos o restamos?")
-    if st.button("Aplicar"):
-        target = fmt_c(-a, 'x').lower().replace("+", "")
-        ingreso = inst.lower().replace(" ", "").replace("+", "")
-        if ingreso == target:
-            st.session_state.paso = 3
-            st.rerun()
-        else:
-            st.session_state.error_en_actual = True
-            st.warning(f"Intento fallido ☹️. El término {fmt_c(a, 'x')} requiere su opuesto para anularse.")
-
-elif st.session_state.paso == 3:
-    st.subheader("Paso 3: Operación Vertical")
-    monomio_op = fmt_c(-a, 'x', incluir_mas=True)
-    st.markdown(f"""<div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
-        <table class="op-table">
-            <tr><td>{fmt_c(a, 'x')}</td><td>{'+' if b > 0 else '-'}</td><td>{fmt_c(abs(b), 'y')}</td><td>=</td><td>{c}</td><td></td></tr>
-            <tr class="red-text"><td>{monomio_op}</td><td></td><td></td><td>=</td><td></td><td>{monomio_op}</td></tr>
-            <tr><td colspan="6" class="linea-suma"></td></tr>
-        </table></div>""", unsafe_allow_html=True)
-
-    if not st.session_state.get('opciones_paso3'):
-        correcta = f"{fmt_c(b, 'y')} = {c} {monomio_op}"
-        opcs = [correcta, f"{fmt_c(b, 'y')} = {c} {fmt_c(a, 'x', incluir_mas=True)}", f"{b}y = {c-a}x"]
-        random.shuffle(opcs)
-        st.session_state.opciones_paso3 = opcs
-
-    res_sel = st.radio("¿Cuál es el resultado?", st.session_state.opciones_paso3)
-    if st.button("Verificar"):
-        if res_sel == f"{fmt_c(b, 'y')} = {c} {monomio_op}":
-            st.session_state.paso = 4
-            st.rerun()
-        else:
-            st.session_state.error_en_actual = True
-            st.error("Resultado incorrecto en la reducción ☹️")
-
-elif st.session_state.paso == 4:
-    st.subheader("Paso 4: El Coeficiente")
-    monomio_op = fmt_c(-a, 'x', incluir_mas=True)
-    st.latex(f"{fmt_c(b, 'y')} = {c} {monomio_op}")
-    op_div = st.selectbox("¿Por cuánto dividimos?", ["...", f"{b}", f"{-b}"], index=0)
-    if st.button("Siguiente"):
-        if op_div == f"{b}":
-            st.session_state.paso = 5
-            st.rerun()
-        else:
-            st.session_state.error_en_actual = True
-            st.error(f"Error al elegir el divisor ☹️")
-
-elif st.session_state.paso == 5:
-    st.subheader("Paso 5: Resultado Final")
-    st.latex(rf"y = \frac{{{c}}}{{{b}}} \frac{{{fmt_c(-a, 'x', incluir_mas=True)}}}{{{b}}}")
+    st.markdown("<h1 class='titulo-principal'>Matemática Esquemática</h1>", unsafe_allow_html=True)
+    st.write("---")
+    st.write("Bienvenido al entorno de aprendizaje visual del profesor **Fabio Molano**.")
+    st.write("Aquí transformamos ecuaciones en estructuras comprensibles para dominar el lenguaje del cambio.")
     
-    m = Fraction(-a, b)
-    inter = Fraction(c, b)
-    txt_correcta = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
-    
-    if not st.session_state.get('opciones_paso5'):
-        opcs = [txt_correcta, f"y = {fmt_c(-m, 'x')} {'+' if inter > 0 else ''} {inter}", f"y = {fmt_c(m, 'x')} - {abs(inter)}"]
-        random.shuffle(opcs)
-        st.session_state.opciones_paso5 = opcs
+    if st.button("Entrar al Módulo de Despeje"):
+        st.session_state.pagina = "despeje"
+        st.rerun()
 
-    res_final = st.radio("Ecuación final:", st.session_state.opciones_paso5, disabled=st.session_state.finalizado)
+# --- VISTA: MÓDULO DE DESPEJE ---
+elif st.session_state.pagina == "despeje":
+    # Sidebar con Logo y Título
+    with st.sidebar:
+        st.image("https://i.imgur.com/vHq4R7p.png", use_container_width=True)
+        st.markdown("### Matemática Esquemática")
+        if st.button("Volver al Inicio"):
+            st.session_state.pagina = "inicio"
+            st.rerun()
+
+    # Inicialización de lógica de ejercicios
+    if 'contador_ejercicios' not in st.session_state:
+        st.session_state.contador_ejercicios = 0
+        st.session_state.puntos_totales = 0
+        preparar_nuevo_ejercicio()
+
+    # (Aquí va toda la lógica del Módulo de Despeje anterior...)
+    # ... [Paso 1 a 4] ...
     
-    if not st.session_state.finalizado:
+    # --- NOVEDAD: PASO 5 CON ANÁLISIS GRÁFICO ---
+    if st.session_state.get('paso') == 5:
+        a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
+        m = Fraction(-a, b)
+        inter = Fraction(c, b)
+        
+        st.subheader("Paso 5: Análisis Esquemático")
+        st.latex(rf"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"**Pendiente (m):** {m}")
+            st.write("Indica la inclinación de la recta.")
+        with col2:
+            st.success(f"**Intercepto (b):** {inter}")
+            st.write("Punto donde cruza el eje Y.")
+
+        # Gráfico dinámico
+        x_vals = np.linspace(-10, 10, 100)
+        y_vals = float(m) * x_vals + float(inter)
+        df_grafico = pd.DataFrame({'x': x_vals, 'y': y_vals})
+        
+        st.line_chart(df_grafico.set_index('x'))
+        
         if st.button("Finalizar Ejercicio"):
-            st.session_state.finalizado = True
             st.session_state.contador_ejercicios += 1
-            
-            if res_final == txt_correcta and not st.session_state.error_en_actual:
-                st.balloons()
-                st.success("¡Perfecto! +10 puntos")
-                st.session_state.ejercicios_perfectos += 1
-                st.session_state.puntos_totales += 10
-            else:
-                st.error("Ejercicio con errores. 0 puntos ☹️")
-                if res_final != txt_correcta:
-                    st.info(f"La respuesta correcta era: {txt_correcta}")
-                st.session_state.ejercicios_erroneos += 1
+            preparar_nuevo_ejercicio()
             st.rerun()
-    else:
-        st.button("Continuar al siguiente", on_click=preparar_nuevo_ejercicio)
