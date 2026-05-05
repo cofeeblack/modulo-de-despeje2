@@ -7,7 +7,7 @@ from fractions import Fraction
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout="centered")
 
-# --- ESTILOS PERSONALIZADOS ---
+# --- ESTILOS ---
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
@@ -17,7 +17,6 @@ st.markdown("""
         margin-left: -225px !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         display: block; letter-spacing: -2px; white-space: nowrap;
     }
-    .texto-centrado { text-align: center !important; font-size: 20px !important; color: #333333; display: block; width: 100%; }
     .stButton>button {
         background-color: #002D62 !important; color: #FFD700 !important; border-radius: 10px;
         border: 2px solid #FFD700; font-weight: bold; font-size: 22px; width: 100%; height: 60px;
@@ -31,7 +30,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNCIONES AUXILIARES ---
+# --- FUNCIONES ---
 NOMBRE_LOGO = "logo fabio faraon.png"
 
 def fmt_c(n, var="", incluir_mas=False):
@@ -53,15 +52,13 @@ def preparar_nuevo_ejercicio():
     st.session_state.opciones_paso3 = []
     st.session_state.opciones_paso5 = []
     st.session_state.error_en_actual = False
-    st.session_state.finalizado = False
 
 def preparar_pi():
-    st.session_state.pi_modo = "analisis" # O "grafico"
+    st.session_state.pi_modo = "analisis"
     st.session_state.pi_m = random.choice([-3, -2, -1, 1, 2, 3, 0.5, -0.5])
     st.session_state.pi_b = random.randint(-5, 5)
     st.session_state.pi_opciones = []
 
-# --- INICIALIZACIÓN DE ESTADO ---
 if 'pagina' not in st.session_state: st.session_state.pagina = "inicio"
 
 # --- VISTA: INICIO ---
@@ -76,7 +73,7 @@ if st.session_state.pagina == "inicio":
         st.session_state.pagina = "despeje"
         st.rerun()
 
-# --- VISTA: MÓDULO DE DESPEJE (RESTAURADO) ---
+# --- VISTA: DESPEJE ---
 elif st.session_state.pagina == "despeje":
     if 'contador_ejercicios' not in st.session_state:
         st.session_state.contador_ejercicios = 0
@@ -96,7 +93,6 @@ elif st.session_state.pagina == "despeje":
     st.title("Módulo de Despeje")
     st.write(f"**Ejercicio {st.session_state.contador_ejercicios + 1}/10:**  `{fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}`")
 
-    # Los 5 pasos interactivos reales
     if st.session_state.paso == 1:
         st.subheader("Paso 1: ¿Cuál es la variable dependiente?")
         ans = st.radio("Selecciona:", ["...", "x", "y"])
@@ -109,8 +105,19 @@ elif st.session_state.pagina == "despeje":
         st.subheader("Paso 2: Neutralizar")
         ins = st.text_input(f"¿Qué término sumamos para quitar {fmt_c(a, 'x')}?")
         if st.button("Aplicar"):
-            if ins.replace(" ", "") == fmt_c(-a, 'x').replace("+", ""): st.session_state.paso = 3
-            else: st.session_state.error_en_actual = True; st.error("Incorrecto.")
+            # Limpieza de entrada: quita espacios y el '+' inicial para comparar
+            entrada = ins.replace(" ", "").lower()
+            esperado = fmt_c(-a, 'x').replace(" ", "").lower()
+            
+            # Permite comparar "+2x" con "2x" eliminando el primer "+" si existe
+            if entrada.startswith('+'): entrada = entrada[1:]
+            if esperado.startswith('+'): esperado = esperado[1:]
+            
+            if entrada == esperado:
+                st.session_state.paso = 3
+            else:
+                st.session_state.error_en_actual = True
+                st.error(f"Incorrecto. Deberías sumar {fmt_c(-a, 'x')}")
             st.rerun()
 
     elif st.session_state.paso == 3:
@@ -128,7 +135,7 @@ elif st.session_state.pagina == "despeje":
         res = st.radio("¿Qué sobrevive?", st.session_state.opciones_paso3)
         if st.button("Siguiente"):
             if res == correcta: st.session_state.paso = 4
-            else: st.session_state.error_en_actual = True; st.error("Error en la suma.")
+            else: st.session_state.error_en_actual = True; st.error("Error en la suma vertical.")
             st.rerun()
 
     elif st.session_state.paso == 4:
@@ -137,7 +144,7 @@ elif st.session_state.pagina == "despeje":
         div = st.radio(f"¿Por qué número dividimos toda la ecuación?", ["...", f"{b}", f"{-b}"])
         if st.button("Dividir"):
             if div == str(b): st.session_state.paso = 5
-            else: st.session_state.error_en_actual = True; st.error("Debe ser el número que multiplica a y.")
+            else: st.session_state.error_en_actual = True; st.error(f"Debes dividir por {b}.")
             st.rerun()
 
     elif st.session_state.paso == 5:
@@ -148,46 +155,48 @@ elif st.session_state.pagina == "despeje":
             st.session_state.opciones_paso5 = random.sample([final_eq, f"y = {m}x - {inter}", f"y = {-m}x + {inter}"], 3)
         sel = st.radio("Ecuación final:", st.session_state.opciones_paso5)
         if st.button("Terminar Ejercicio"):
-            if sel == final_eq and not st.session_state.error_en_actual: st.balloons(); st.session_state.puntos_totales += 10
+            if sel == final_eq and not st.session_state.error_en_actual: 
+                st.balloons()
+                st.session_state.puntos_totales += 10
             st.session_state.contador_ejercicios += 1
             preparar_nuevo_ejercicio()
             st.rerun()
 
-# --- VISTA: MÓDULO PENDIENTE-INTERCEPTO ---
+# --- VISTA: PENDIENTE-INTERCEPTO ---
 elif st.session_state.pagina == "pendiente_intercepto":
     st.title("📈 Módulo Pendiente-Intercepto")
     m_t, b_t = st.session_state.pi_m, st.session_state.pi_b
 
     if st.session_state.pi_modo == "analisis":
-        st.subheader("Parte 1: Identificación Numérica")
+        st.subheader("Parte 1: Análisis Numérico")
         st.latex(f"y = {fmt_c(m_t, 'x')} {'+' if b_t >= 0 else ''} {b_t}")
         c1, c2 = st.columns(2)
-        with c1: m_in = st.number_input("Pendiente (m):", value=0.0)
-        with c2: b_in = st.number_input("Intercepto (b):", value=0.0)
+        with c1: m_in = st.number_input("Identifica m:", value=0.0, step=0.1)
+        with c2: b_in = st.number_input("Identifica b:", value=0.0, step=1.0)
         
-        if st.button("Validar Datos"):
+        if st.button("Validar Análisis"):
             if float(m_in) == float(m_t) and int(b_in) == int(b_t):
-                st.success(f"¡Bien! El intercepto con Y ocurre en (0, {b_t})")
-                if st.button("Pasar a Gráfico >>"):
+                st.success(f"¡Correcto! El corte con el eje Y es en b = {b_t}")
+                if st.button("Ir a Identificación Gráfica >>"):
                     st.session_state.pi_modo = "grafico"
                     st.rerun()
-            else: st.error("Revisa los valores de la ecuación.")
+            else: st.error("Los valores no coinciden con la ecuación.")
 
     elif st.session_state.pi_modo == "grafico":
         st.subheader("Parte 2: Identificación Visual")
-        x = np.linspace(-10, 10, 100)
-        y = float(m_t) * x + b_t
-        st.line_chart(pd.DataFrame({'x': x, 'y': y}).set_index('x'), height=300)
+        x_vals = np.linspace(-10, 10, 100)
+        y_vals = float(m_t) * x_vals + b_t
+        st.line_chart(pd.DataFrame({'x': x_vals, 'y': y_vals}).set_index('x'), height=300)
         
         correcta_pi = f"y = {fmt_c(m_t, 'x')} {'+' if b_t >= 0 else ''} {b_t}"
         if not st.session_state.pi_opciones:
             st.session_state.pi_opciones = random.sample([correcta_pi, f"y = {-m_t}x + {b_t}", f"y = {m_t}x + {-b_t}", f"y = {m_t*2}x + {b_t}"], 4)
         
         op = st.radio("¿Cuál es la ecuación de la recta?", st.session_state.pi_opciones)
-        if st.button("Verificar Gráfico"):
+        if st.button("Verificar"):
             if op == correcta_pi:
-                st.balloons(); st.success("¡Dominas la interpretación gráfica!")
+                st.balloons(); st.success("¡Excelente interpretación gráfica!")
                 if st.button("Nuevo Desafío"): preparar_pi(); st.rerun()
-            else: st.warning("Observa el punto de corte en el eje vertical.")
+            else: st.warning("Analiza el punto donde la recta toca el eje Y.")
 
-    if st.button("🏠 Salir"): st.session_state.clear(); st.rerun()
+    if st.button("🏠 Salir al Inicio"): st.session_state.clear(); st.rerun()
