@@ -11,52 +11,28 @@ st.set_page_config(page_title="Matemática Esquemática - Fabio Molano", layout=
 st.markdown("""
     <style>
     .main { background-color: #ffffff; }
-    
     .titulo-esquemática { 
-        color: #002D62 !important; 
-        text-align: center !important; 
-        font-weight: bold !important; 
-        font-size: 62px !important;
-        margin-top: 5px !important;
-        margin-bottom: 30px !important;
-        margin-left: -225px !important; 
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        display: block;
-        letter-spacing: -2px;
-        white-space: nowrap;
+        color: #002D62 !important; text-align: center !important; font-weight: bold !important; 
+        font-size: 62px !important; margin-top: 5px !important; margin-bottom: 30px !important;
+        margin-left: -225px !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        display: block; letter-spacing: -2px; white-space: nowrap;
     }
-    
-    .texto-centrado {
-        text-align: center !important;
-        font-size: 20px !important;
-        color: #333333;
-        display: block;
-        width: 100%;
-    }
-
+    .texto-centrado { text-align: center !important; font-size: 20px !important; color: #333333; display: block; width: 100%; }
     .stButton>button {
-        background-color: #002D62 !important;
-        color: #FFD700 !important;
-        border-radius: 10px;
-        border: 2px solid #FFD700;
-        font-weight: bold;
-        font-size: 22px;
-        width: 100%;
-        height: 60px;
+        background-color: #002D62 !important; color: #FFD700 !important; border-radius: 10px;
+        border: 2px solid #FFD700; font-weight: bold; font-size: 22px; width: 100%; height: 60px;
     }
-    
-    .logo-container { display: flex; justify-content: center; margin-bottom: 0px; }
-    hr { margin-top: 0px; margin-bottom: 25px; }
-
     .op-table { margin-left: auto; margin-right: auto; font-family: 'Courier New', monospace; font-size: 24px; border-collapse: collapse; }
     .op-table td { padding: 0px 12px; text-align: center; }
     .red-text { color: #e74c3c; font-weight: bold; }
     .linea-suma { border-top: 2px solid black; }
+    .logo-container { display: flex; justify-content: center; margin-bottom: 0px; }
+    hr { margin-top: 0px; margin-bottom: 25px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE APOYO ---
-NOMBRE_LOGO = "logo fabio faraon.png" 
+# --- FUNCIONES AUXILIARES ---
+NOMBRE_LOGO = "logo fabio faraon.png"
 
 def fmt_c(n, var="", incluir_mas=False):
     if isinstance(n, Fraction):
@@ -71,135 +47,147 @@ def fmt_c(n, var="", incluir_mas=False):
 
 def preparar_nuevo_ejercicio():
     st.session_state.paso = 1
-    st.session_state.a = random.choice([-5, -3, -2, -1, 1, 2, 3, 5])
-    st.session_state.b = random.choice([-5, -2, -1, 1, 2, 5])
-    st.session_state.c = random.randint(2, 15)
+    st.session_state.a = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
+    st.session_state.b = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
+    st.session_state.c = random.randint(5, 25)
     st.session_state.opciones_paso3 = []
     st.session_state.opciones_paso5 = []
     st.session_state.error_en_actual = False
     st.session_state.finalizado = False
 
-def preparar_pendiente_intercepto():
-    st.session_state.sub_paso_pi = 1
-    st.session_state.m_target = random.choice([-2, -1, 0.5, 1, 2, 3])
-    st.session_state.b_target = random.randint(-5, 5)
+def preparar_pi():
+    st.session_state.pi_modo = "analisis" # O "grafico"
+    st.session_state.pi_m = random.choice([-3, -2, -1, 1, 2, 3, 0.5, -0.5])
+    st.session_state.pi_b = random.randint(-5, 5)
+    st.session_state.pi_opciones = []
 
-# --- ESTADO DE SESIÓN ---
-if 'pagina' not in st.session_state:
-    st.session_state.pagina = "inicio"
+# --- INICIALIZACIÓN DE ESTADO ---
+if 'pagina' not in st.session_state: st.session_state.pagina = "inicio"
 
-# --- VISTA 1: INICIO ---
+# --- VISTA: INICIO ---
 if st.session_state.pagina == "inicio":
     st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     try: st.image(NOMBRE_LOGO, width=480)
-    except: st.error("Logo no encontrado.")
+    except: st.warning("Logo no detectado.")
     st.markdown('</div>', unsafe_allow_html=True)
-    
     st.markdown('<span class="titulo-esquemática">Matemática Esquemática</span>', unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown('<span class="texto-centrado">Bienvenido al entorno visual del profesor <b>Fabio Molano</b>.</span>', unsafe_allow_html=True)
-    
     if st.button("🚀 Entrar al Módulo de Despeje"):
         st.session_state.pagina = "despeje"
         st.rerun()
 
-# --- VISTA 2: DESPEJE ---
+# --- VISTA: MÓDULO DE DESPEJE (RESTAURADO) ---
 elif st.session_state.pagina == "despeje":
     if 'contador_ejercicios' not in st.session_state:
         st.session_state.contador_ejercicios = 0
         st.session_state.puntos_totales = 0
         preparar_nuevo_ejercicio()
 
-    # Pantalla final del módulo de despeje
     if st.session_state.contador_ejercicios >= 10:
-        st.balloons()
-        st.header("✅ ¡Módulo de Despeje Completado!")
-        st.write(f"Has obtenido {st.session_state.puntos_totales}/100 puntos.")
-        st.divider()
-        st.subheader("¿Qué quieres hacer ahora?")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📈 Ir al Módulo Pendiente-Intercepto"):
-                st.session_state.pagina = "pendiente_intercepto"
-                preparar_pendiente_intercepto()
-                st.rerun()
-        with col2:
-            if st.button("🏠 Volver al Inicio"):
-                st.session_state.clear()
-                st.rerun()
+        st.header("🏁 Módulo Completado")
+        st.metric("Puntaje", f"{st.session_state.puntos_totales}/100")
+        if st.button("📈 Ir al Módulo Pendiente-Intercepto"):
+            st.session_state.pagina = "pendiente_intercepto"
+            preparar_pi()
+            st.rerun()
         st.stop()
 
-    # Lógica de los 5 pasos (simplificada para el flujo)
     a, b, c = st.session_state.a, st.session_state.b, st.session_state.c
     st.title("Módulo de Despeje")
-    st.write(f"Ejercicio {st.session_state.contador_ejercicios + 1}/10:  **{fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}**")
-    
-    # ... (Aquí va la lógica de los 5 pasos del código anterior) ...
-    # Para ahorrar espacio y que funcione, simulamos el avance al paso final rápidamente:
-    st.info("Resuelve el despeje siguiendo los pasos esquemáticos.")
-    if st.button("Siguiente Paso >>"):
-        st.session_state.contador_ejercicios += 1
-        st.session_state.puntos_totales += 10
-        preparar_nuevo_ejercicio()
-        st.rerun()
+    st.write(f"**Ejercicio {st.session_state.contador_ejercicios + 1}/10:**  `{fmt_c(a, 'x')} {'+' if b > 0 else ''} {fmt_c(b, 'y')} = {c}`")
 
-# --- VISTA 3: PENDIENTE-INTERCEPTO ---
+    # Los 5 pasos interactivos reales
+    if st.session_state.paso == 1:
+        st.subheader("Paso 1: ¿Cuál es la variable dependiente?")
+        ans = st.radio("Selecciona:", ["...", "x", "y"])
+        if st.button("Comprobar"):
+            if ans == "y": st.session_state.paso = 2
+            else: st.session_state.error_en_actual = True; st.error("¡Revisa! Queremos dejar sola a la 'y'")
+            st.rerun()
+
+    elif st.session_state.paso == 2:
+        st.subheader("Paso 2: Neutralizar")
+        ins = st.text_input(f"¿Qué término sumamos para quitar {fmt_c(a, 'x')}?")
+        if st.button("Aplicar"):
+            if ins.replace(" ", "") == fmt_c(-a, 'x').replace("+", ""): st.session_state.paso = 3
+            else: st.session_state.error_en_actual = True; st.error("Incorrecto.")
+            st.rerun()
+
+    elif st.session_state.paso == 3:
+        st.subheader("Paso 3: Operación Vertical")
+        op_monomio = fmt_c(-a, 'x', incluir_mas=True)
+        st.markdown(f"""<div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px;">
+        <table class="op-table">
+            <tr><td>{fmt_c(a, 'x')}</td><td>{'+' if b > 0 else '-'}</td><td>{fmt_c(abs(b), 'y')}</td><td>=</td><td>{c}</td></tr>
+            <tr class="red-text"><td>{op_monomio}</td><td></td><td></td><td>=</td><td>{op_monomio}</td></tr>
+            <tr><td colspan="5" class="linea-suma"></td></tr>
+        </table></div>""", unsafe_allow_html=True)
+        correcta = f"{fmt_c(b, 'y')} = {c} {op_monomio}"
+        if not st.session_state.opciones_paso3:
+            st.session_state.opciones_paso3 = random.sample([correcta, f"{b}y = {c}{fmt_c(a, 'x', True)}", f"y = {c-a}x"], 3)
+        res = st.radio("¿Qué sobrevive?", st.session_state.opciones_paso3)
+        if st.button("Siguiente"):
+            if res == correcta: st.session_state.paso = 4
+            else: st.session_state.error_en_actual = True; st.error("Error en la suma.")
+            st.rerun()
+
+    elif st.session_state.paso == 4:
+        st.subheader("Paso 4: El Coeficiente")
+        st.latex(f"{fmt_c(b, 'y')} = {c} {fmt_c(-a, 'x', True)}")
+        div = st.radio(f"¿Por qué número dividimos toda la ecuación?", ["...", f"{b}", f"{-b}"])
+        if st.button("Dividir"):
+            if div == str(b): st.session_state.paso = 5
+            else: st.session_state.error_en_actual = True; st.error("Debe ser el número que multiplica a y.")
+            st.rerun()
+
+    elif st.session_state.paso == 5:
+        st.subheader("Paso 5: Resultado Final")
+        m, inter = Fraction(-a, b), Fraction(c, b)
+        final_eq = f"y = {fmt_c(m, 'x')} {'+' if inter > 0 else ''} {inter}"
+        if not st.session_state.opciones_paso5:
+            st.session_state.opciones_paso5 = random.sample([final_eq, f"y = {m}x - {inter}", f"y = {-m}x + {inter}"], 3)
+        sel = st.radio("Ecuación final:", st.session_state.opciones_paso5)
+        if st.button("Terminar Ejercicio"):
+            if sel == final_eq and not st.session_state.error_en_actual: st.balloons(); st.session_state.puntos_totales += 10
+            st.session_state.contador_ejercicios += 1
+            preparar_nuevo_ejercicio()
+            st.rerun()
+
+# --- VISTA: MÓDULO PENDIENTE-INTERCEPTO ---
 elif st.session_state.pagina == "pendiente_intercepto":
     st.title("📈 Módulo Pendiente-Intercepto")
-    m, b_int = st.session_state.m_target, st.session_state.b_target
+    m_t, b_t = st.session_state.pi_m, st.session_state.pi_b
 
-    # PARTE A: Diferenciar m y b
-    if st.session_state.sub_paso_pi == 1:
-        st.subheader("Parte 1: Análisis de la Ecuación")
-        st.latex(f"y = {fmt_c(m, 'x')} {'+' if b_int >= 0 else ''} {b_int}")
+    if st.session_state.pi_modo == "analisis":
+        st.subheader("Parte 1: Identificación Numérica")
+        st.latex(f"y = {fmt_c(m_t, 'x')} {'+' if b_t >= 0 else ''} {b_t}")
+        c1, c2 = st.columns(2)
+        with c1: m_in = st.number_input("Pendiente (m):", value=0.0)
+        with c2: b_in = st.number_input("Intercepto (b):", value=0.0)
         
-        col_a, col_b = st.columns(2)
-        with col_a:
-            m_input = st.number_input("Identifica la pendiente (m):", step=0.1)
-        with col_b:
-            b_input = st.number_input("Identifica el intercepto (b):", step=1)
-            
-        if st.button("Validar Análisis"):
-            if float(m_input) == float(m) and int(b_input) == int(b_int):
-                st.success(f"¡Correcto! Cuando x=0, la recta corta el eje y en {b_int}.")
-                if st.button("Ir a Identificación Gráfica"):
-                    st.session_state.sub_paso_pi = 2
+        if st.button("Validar Datos"):
+            if float(m_in) == float(m_t) and int(b_in) == int(b_t):
+                st.success(f"¡Bien! El intercepto con Y ocurre en (0, {b_t})")
+                if st.button("Pasar a Gráfico >>"):
+                    st.session_state.pi_modo = "grafico"
                     st.rerun()
-            else:
-                st.error("Revisa los valores. Recuerda que m acompaña a la x y b es el término independiente.")
+            else: st.error("Revisa los valores de la ecuación.")
 
-    # PARTE B: Identificar gráfico
-    elif st.session_state.sub_paso_pi == 2:
-        st.subheader("Parte 2: Identificación Gráfica")
-        st.write("Observa la recta y selecciona la ecuación que le corresponde:")
-        
-        # Generar Gráfico
+    elif st.session_state.pi_modo == "grafico":
+        st.subheader("Parte 2: Identificación Visual")
         x = np.linspace(-10, 10, 100)
-        y = m * x + b_int
-        df = pd.DataFrame({'x': x, 'y': y})
-        st.line_chart(df.set_index('x'), height=300)
+        y = float(m_t) * x + b_t
+        st.line_chart(pd.DataFrame({'x': x, 'y': y}).set_index('x'), height=300)
         
-        # Opciones
-        correcta = f"y = {fmt_c(m, 'x')} {'+' if b_int >= 0 else ''} {b_int}"
-        distractores = [
-            f"y = {fmt_c(-m, 'x')} {'+' if b_int >= 0 else ''} {b_int}",
-            f"y = {fmt_c(m, 'x')} {'+' if -b_int >= 0 else ''} {-b_int}",
-            f"y = {fmt_c(2*m, 'x')} {'+' if b_int >= 0 else ''} {b_int}"
-        ]
-        opciones = random.sample([correcta] + distractores, 4)
+        correcta_pi = f"y = {fmt_c(m_t, 'x')} {'+' if b_t >= 0 else ''} {b_t}"
+        if not st.session_state.pi_opciones:
+            st.session_state.pi_opciones = random.sample([correcta_pi, f"y = {-m_t}x + {b_t}", f"y = {m_t}x + {-b_t}", f"y = {m_t*2}x + {b_t}"], 4)
         
-        seleccion = st.radio("¿Cuál es la ecuación de esta recta?", opciones)
-        
-        if st.button("Comprobar Gráfico"):
-            if seleccion == correcta:
-                st.balloons()
-                st.success("¡Excelente visión geométrica! Has identificado la pendiente e intercepto correctamente.")
-                if st.button("Generar otro desafío"):
-                    preparar_pendiente_intercepto()
-                    st.rerun()
-            else:
-                st.warning("Fíjate bien: ¿En qué número toca el eje vertical? ¿La recta sube o baja?")
+        op = st.radio("¿Cuál es la ecuación de la recta?", st.session_state.pi_opciones)
+        if st.button("Verificar Gráfico"):
+            if op == correcta_pi:
+                st.balloons(); st.success("¡Dominas la interpretación gráfica!")
+                if st.button("Nuevo Desafío"): preparar_pi(); st.rerun()
+            else: st.warning("Observa el punto de corte en el eje vertical.")
 
-    if st.button("🏠 Salir al Inicio"):
-        st.session_state.clear()
-        st.rerun()
+    if st.button("🏠 Salir"): st.session_state.clear(); st.rerun()
